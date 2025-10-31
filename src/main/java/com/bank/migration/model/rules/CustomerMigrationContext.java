@@ -25,11 +25,51 @@ public class CustomerMigrationContext {
     private List<AccountInfo> accounts;
     private List<String> requestedFeatures;
     
+    // Derived customer-level status (computed from account statuses)
+    private CustomerStatus customerStatus;
+    
     @Builder.Default
     private Map<String, Boolean> featureDecisions = new HashMap<>();
     
     @Builder.Default
     private Map<String, String> decisionReasons = new HashMap<>();
+    
+    // Derive customer-level status from account statuses (most critical account wins)
+    public CustomerStatus deriveCustomerStatus() {
+        // Priority 1: Any NOT_MIGRATED (dropped customer)
+        if (accounts.stream().anyMatch(a -> a.getMigrationStatus() == MigrationStatus.NOT_MIGRATED)) {
+            this.customerStatus = CustomerStatus.DROPPED;
+            return CustomerStatus.DROPPED;
+        }
+        
+        // Priority 2: Any IN_PROGRESS (actively migrating)
+        if (accounts.stream().anyMatch(a -> a.getMigrationStatus() == MigrationStatus.IN_PROGRESS)) {
+            this.customerStatus = CustomerStatus.IN_PROGRESS;
+            return CustomerStatus.IN_PROGRESS;
+        }
+        
+        // Priority 3: Any SCHEDULED (planned for migration)
+        if (accounts.stream().anyMatch(a -> a.getMigrationStatus() == MigrationStatus.SCHEDULED)) {
+            this.customerStatus = CustomerStatus.SCHEDULED;
+            return CustomerStatus.SCHEDULED;
+        }
+        
+        // Priority 4: All MIGRATED (migration completed)
+        if (accounts.stream().allMatch(a -> a.getMigrationStatus() == MigrationStatus.MIGRATED)) {
+            this.customerStatus = CustomerStatus.COMPLETED;
+            return CustomerStatus.COMPLETED;
+        }
+        
+        // Priority 5: All EXCLUDED (lending/IRA only customers)
+        if (accounts.stream().allMatch(a -> a.getMigrationStatus() == MigrationStatus.EXCLUDED)) {
+            this.customerStatus = CustomerStatus.EXCLUDED;
+            return CustomerStatus.EXCLUDED;
+        }
+        
+        // Priority 6: Default (no migration applicable)
+        this.customerStatus = CustomerStatus.NOT_IN_SCOPE;
+        return CustomerStatus.NOT_IN_SCOPE;
+    }
     
     // Helper methods for rules
     public boolean hasAccountType(AccountType accountType) {

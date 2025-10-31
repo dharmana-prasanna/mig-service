@@ -35,7 +35,11 @@ public class FeatureDecisionService {
                 .requestedFeatures(features)
                 .build();
         
-        // Step 3: Execute Drools rules (all logic now in CSV)
+        // Step 3: Derive customer-level status from account statuses
+        context.deriveCustomerStatus();
+        log.info("Customer {} has derived status: {}", customerId, context.getCustomerStatus());
+        
+        // Step 4: Execute Drools rules (all logic now in CSV)
         KieSession kieSession = kieContainer.newKieSession();
         try {
             kieSession.insert(context);
@@ -45,11 +49,11 @@ public class FeatureDecisionService {
             kieSession.dispose();
         }
         
-        // Step 4: Apply defaults for features not set by rules (enabled by default)
+        // Step 5: Apply defaults for features not set by rules (enabled by default)
         context.applyDefaults();
         log.debug("Applied defaults for unspecified features");
         
-        // Step 5: Build response from context decisions
+        // Step 6: Build response from context decisions
         List<FeatureStatus> featureStatuses = features.stream()
                 .map(feature -> FeatureStatus.builder()
                         .feature(feature)

@@ -36,32 +36,46 @@ sequenceDiagram
     FeatureController-->>Client: JSON response with feature statuses
 ```
 
-## Migration Rules with Granular Feature Control
+## Customer Status-Based Design (Simplified!)
 
-The system now supports **per-feature control**! Each feature (feature1, feature2, feature3, feature4) can be individually enabled or disabled.
+The system uses a **two-step approach** for maximum simplicity:
 
-### Special Cases: Automatic Feature Enablement
+### Step 1: Derive Customer Status (Automatic)
 
-The system automatically enables all features (skipping Excel rules) in these scenarios:
+System examines customer's accounts and derives a single **Customer Status** based on most critical account:
 
-1. **Priority 1 - Dropped Customers:** ANY account with `NOT_MIGRATED` status → All features enabled  
-   See `DROPPED_CUSTOMERS.md` for details.
+| Customer Status | When Applied | Meaning |
+|-----------------|--------------|---------|
+| **DROPPED** | Any account NOT_MIGRATED | Customer dropped from migration |
+| **IN_PROGRESS** | Any account IN_PROGRESS | Actively migrating now |
+| **SCHEDULED** | Any account SCHEDULED | Migration planned |
+| **COMPLETED** | All accounts MIGRATED | Migration finished |
+| **EXCLUDED** | All accounts EXCLUDED | Never migrating (lending/IRA only) |
+| **NOT_IN_SCOPE** | Default | No migration applicable |
 
-2. **Priority 2 - Terminal States:** ALL accounts are (`MIGRATED` OR `EXCLUDED` OR `NOT_MIGRATED`) → All features enabled  
-   See `TERMINAL_STATES.md` for details.
+### Step 2: Apply Feature Rules (Excel)
 
-3. **Priority 3 - Active Migration:** Has `SCHEDULED` or `IN_PROGRESS` accounts → Apply Excel rules  
-   Feature-by-feature control per WAVE1/WAVE2.
+**Simplified Excel with only 2 condition columns:**
+- **customerStatus** - Derived status from step 1
+- **isWithinMigrationWindow** - Hours before migration (e.g., 7, 12)
+
+**Example Rules:**
+- DROPPED → All features enabled
+- IN_PROGRESS + within 7 hours → All features disabled
+- SCHEDULED + within 7 hours → All features disabled
+- SCHEDULED + before window → All features enabled
+- COMPLETED → All features enabled
+
+See `CUSTOMER_STATUS_DESIGN.md` and `SIMPLIFIED_EXCEL_GUIDE.md` for complete details.
 
 ### Time-Based Feature Control
 
-**NEW!** Rules now support time windows - features are enabled until a configured time before migration:
-- **WAVE1 Rules:** Apply 7 hours before migration (e.g., Friday 5PM for Saturday 12AM migration)
-- **WAVE2 Rules:** Apply 12 hours before migration (e.g., Friday 12PM for Saturday 12AM migration)
+Features are enabled until a configured time before migration:
+- **IN_PROGRESS/SCHEDULED Rules:** Apply 7 hours before migration (Friday 5PM for Saturday 12AM)
 - **Before window:** Features enabled (normal operation)
 - **Within window:** Apply migration rules (feature control)
 
-Hours are configurable per rule in Excel. See `TIME_BASED_CONTROL.md` for details.
+Hours are configurable per rule in Excel column C.
 
 ### WAVE1
 Migrates customers with (savings OR CD) WITHOUT checking accounts.
@@ -204,8 +218,7 @@ src/main/
     ├── application.yml
     ├── META-INF/kmodule.xml
     └── rules/
-        ├── migration-rules.xlsx          # Excel decision table (primary)
-        └── migration-rules.csv            # CSV format (can be opened in Excel)
+        └── migration-rules.csv            # SIMPLIFIED! Just 7 rules, 2 conditions
 ```
 
 ## Building and Running

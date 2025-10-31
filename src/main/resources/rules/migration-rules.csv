@@ -1,18 +1,16 @@
-RuleSet,com.bank.migration.rules,,,,,,,,,,,
-Sequential,false,,,,,,,,,,,
-Import,com.bank.migration.model.rules.CustomerMigrationContext,,,,,,,,,,,
-Import,com.bank.migration.model.migration.MigrationWave,,,,,,,,,,,
-,,,,,,,,,,,
-RuleTable Migration Feature Rules,,,,,,,,,,,
-NAME,CONDITION,CONDITION,CONDITION,CONDITION,CONDITION,CONDITION,CONDITION,ACTION,ACTION,ACTION,ACTION
-Rule Name,hasNotMigratedStatus(),allAccountsInTerminalState(),isWithinMigrationWindow(int),currentWave,hasSavingsOrCD(),hasChecking(),hasLendingOrIRA(),feature1,feature2,feature3,feature4
-,$context : CustomerMigrationContext,$context,$context,$context,$context,$context,$context,$context,$context,$context,$context
-Priority 1 - Dropped Customer,true,,,,,,enabled,enabled,enabled,enabled
-Priority 2 - Terminal States,false,true,,,,,enabled,enabled,enabled,enabled
-WAVE1 - Suppress Savings/CD only,false,false,7,WAVE1,true,false,false,disabled,disabled,disabled,disabled
-WAVE1 - Enable Savings/CD with Checking,false,false,7,WAVE1,true,true,,enabled,enabled,enabled,enabled
-WAVE1 - Suppress Savings/CD with Lending/IRA,false,false,7,WAVE1,true,,true,disabled,disabled,disabled,disabled
-WAVE2 - Suppress Savings/CD/Checking,false,false,12,WAVE2,true,true,false,disabled,disabled,disabled,disabled
-WAVE2 - Suppress with Lending/IRA,false,false,12,WAVE2,true,true,true,disabled,disabled,disabled,disabled
-Default - Not in scope,false,false,,NOT_APPLICABLE,,,,enabled,enabled,enabled,enabled
-Default - No Savings or CD,false,false,,,false,,,enabled,enabled,enabled,enabled
+RuleSet,com.bank.migration.rules,,,,,,
+Sequential,false,,,,,,
+Import,com.bank.migration.model.rules.CustomerMigrationContext,,,,,,
+Import,com.bank.migration.model.rules.CustomerStatus,,,,,,
+,,,,,,
+RuleTable Migration Feature Rules,,,,,,
+NAME,CONDITION,CONDITION,ACTION,ACTION,ACTION,ACTION
+Rule Name,customerStatus,isWithinMigrationWindow(int),feature1,feature2,feature3,feature4
+,$context : CustomerMigrationContext,$context,$context,$context,$context,$context
+DROPPED - Enable all features,DROPPED,,enabled,enabled,enabled,enabled
+IN_PROGRESS - Disable all features,IN_PROGRESS,7,disabled,disabled,disabled,disabled
+SCHEDULED - Within window - Disable all,SCHEDULED,7,disabled,disabled,disabled,disabled
+SCHEDULED - Before window - Enable all,SCHEDULED,0,enabled,enabled,enabled,enabled
+COMPLETED - All migrated - Enable all,COMPLETED,,enabled,enabled,enabled,enabled
+EXCLUDED - Lending/IRA only - Enable all,EXCLUDED,,enabled,enabled,enabled,enabled
+NOT_IN_SCOPE - Enable all features,NOT_IN_SCOPE,,enabled,enabled,enabled,enabled

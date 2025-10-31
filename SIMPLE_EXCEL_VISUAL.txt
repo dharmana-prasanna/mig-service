@@ -1,0 +1,113 @@
+# Simplified Excel Structure - Visual Guide
+
+## This is what your SIMPLIFIED Excel file now looks like:
+
+Row 1:  RuleSet | com.bank.migration.rules |  |  |  |  |
+Row 2:  Sequential | false |  |  |  |  |
+Row 3:  Import | com.bank.migration.model.rules.CustomerMigrationContext |  |  |  |  |
+Row 4:  Import | com.bank.migration.model.rules.CustomerStatus |  |  |  |  |
+Row 5:  (EMPTY ROW)
+Row 6:  RuleTable Migration Feature Rules |  |  |  |  |  |
+Row 7:  NAME | CONDITION | CONDITION | ACTION | ACTION | ACTION | ACTION
+Row 8:  Rule Name | customerStatus | isWithinMigrationWindow(int) | feature1 | feature2 | feature3 | feature4
+Row 9:  (empty) | $context : CustomerMigrationContext | $context | $context | $context | $context | $context
+
+--- RULES (Just 7 simple rules!) ---
+
+Row 10: DROPPED - Enable all features | DROPPED | (blank) | enabled | enabled | enabled | enabled
+Row 11: IN_PROGRESS - Disable all features | IN_PROGRESS | 7 | disabled | disabled | disabled | disabled
+Row 12: SCHEDULED - Within window - Disable all | SCHEDULED | 7 | disabled | disabled | disabled | disabled
+Row 13: SCHEDULED - Before window - Enable all | SCHEDULED | 0 | enabled | enabled | enabled | enabled
+Row 14: COMPLETED - All migrated - Enable all | COMPLETED | (blank) | enabled | enabled | enabled | enabled
+Row 15: EXCLUDED - Lending/IRA only - Enable all | EXCLUDED | (blank) | enabled | enabled | enabled | enabled
+Row 16: NOT_IN_SCOPE - Enable all features | NOT_IN_SCOPE | (blank) | enabled | enabled | enabled | enabled
+
+## Column Guide (SIMPLIFIED!)
+
+### Column A: Rule Name
+Describes what this rule does (for documentation)
+
+### Column B: customerStatus ⭐ NEW!
+The customer's overall migration status (automatically calculated by system):
+- DROPPED = Customer dropped from migration
+- IN_PROGRESS = Customer migrating now
+- SCHEDULED = Customer will migrate soon
+- COMPLETED = Customer finished migrating
+- EXCLUDED = Customer never migrates (lending/IRA only)
+- NOT_IN_SCOPE = Customer not part of migration
+
+**You just match on this - the system calculates it!**
+
+### Column C: isWithinMigrationWindow(int)
+Hours before migration when restrictions should start:
+- 7 = Start 7 hours before (Friday 5PM for Saturday 12AM)
+- 12 = Start 12 hours before (Friday 12PM for Saturday 12AM)
+- 0 = Before the window (special value for "not within window")
+- (blank) = Time doesn't matter
+
+### Columns D-G: Features
+- enabled = Feature is ON
+- disabled = Feature is OFF
+- (blank) = Use default (ON)
+
+## Huge Simplification!
+
+### Old Structure (11 columns):
+```
+A: Rule Name
+B: hasNotMigratedStatus()        ← Complex!
+C: allAccountsInTerminalState()  ← Complex!
+D: isWithinMigrationWindow(int)
+E: currentWave                   ← Confusing!
+F: hasSavingsOrCD()              ← Technical!
+G: hasChecking()                 ← Technical!
+H: hasLendingOrIRA()             ← Technical!
+I-L: Features
+```
+
+### New Structure (7 columns):
+```
+A: Rule Name
+B: customerStatus                ← Business-friendly!
+C: isWithinMigrationWindow(int)
+D-G: Features
+```
+
+**71% fewer columns!**
+
+## How to Use
+
+### To Change When Restrictions Start
+Row 11 (IN_PROGRESS): Change column C from `7` to `12`
+→ Restrictions start 12 hours before instead of 7
+
+### To Change Features for a Status
+Row 11 (IN_PROGRESS): Change feature3 from `disabled` to `enabled`
+→ IN_PROGRESS customers can use feature3
+
+### To Add New Rule
+Insert row after 16 with new customer status
+
+## Example: Reading a Rule
+
+**Row 12: SCHEDULED - Within window - Disable all**
+
+**In Plain English:**
+"For customers who are SCHEDULED for migration, when we're within 7 hours before their migration date, disable all 4 features."
+
+**Old design would have said:**
+"For customers who don't have NOT_MIGRATED status AND don't have all terminal states AND are within migration window AND have WAVE1 AND have savings or CD AND don't have checking AND don't have lending..."
+
+**See the difference?** Much simpler!
+
+## Customer Status Quick Reference
+
+✅ **DROPPED** = Not migrating (dropped)
+✅ **IN_PROGRESS** = Migrating now
+✅ **SCHEDULED** = Will migrate soon
+✅ **COMPLETED** = Already migrated
+✅ **EXCLUDED** = Never migrates (lending/IRA)
+✅ **NOT_IN_SCOPE** = Not affected
+
+**The system figures this out automatically. You just use it in rules!**
+

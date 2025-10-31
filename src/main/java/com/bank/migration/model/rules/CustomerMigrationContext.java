@@ -2,12 +2,14 @@ package com.bank.migration.model.rules;
 
 import com.bank.migration.model.migration.AccountInfo;
 import com.bank.migration.model.migration.AccountType;
+import com.bank.migration.model.migration.MigrationStatus;
 import com.bank.migration.model.migration.MigrationWave;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +61,20 @@ public class CustomerMigrationContext {
                     account.getMigrationStatus() == MigrationStatus.EXCLUDED ||
                     account.getMigrationStatus() == MigrationStatus.NOT_MIGRATED
                 );
+    }
+    
+    public boolean isWithinMigrationWindow(int hoursBeforeMigration) {
+        LocalDateTime now = LocalDateTime.now();
+        
+        return accounts.stream()
+                .filter(account -> account.getMigrationDate() != null)
+                .anyMatch(account -> {
+                    LocalDateTime migrationDate = account.getMigrationDate().atStartOfDay();
+                    LocalDateTime windowStart = migrationDate.minusHours(hoursBeforeMigration);
+                    
+                    // Within window if current time >= window start AND < migration date + 1 day
+                    return !now.isBefore(windowStart) && now.isBefore(migrationDate.plusDays(1));
+                });
     }
     
     public MigrationWave getCurrentWave() {

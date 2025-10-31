@@ -53,6 +53,16 @@ The system automatically enables all features (skipping Excel rules) in these sc
 3. **Priority 3 - Active Migration:** Has `SCHEDULED` or `IN_PROGRESS` accounts → Apply Excel rules  
    Feature-by-feature control per WAVE1/WAVE2.
 
+### Time-Based Feature Control
+
+**NEW!** Rules now support time windows - features are enabled until a configured time before migration:
+- **WAVE1 Rules:** Apply 7 hours before migration (e.g., Friday 5PM for Saturday 12AM migration)
+- **WAVE2 Rules:** Apply 12 hours before migration (e.g., Friday 12PM for Saturday 12AM migration)
+- **Before window:** Features enabled (normal operation)
+- **Within window:** Apply migration rules (feature control)
+
+Hours are configurable per rule in Excel. See `TIME_BASED_CONTROL.md` for details.
+
 ### WAVE1
 Migrates customers with (savings OR CD) WITHOUT checking accounts.
 

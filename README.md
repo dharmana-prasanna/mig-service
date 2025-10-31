@@ -40,6 +40,19 @@ sequenceDiagram
 
 The system now supports **per-feature control**! Each feature (feature1, feature2, feature3, feature4) can be individually enabled or disabled.
 
+### Special Cases: Automatic Feature Enablement
+
+The system automatically enables all features (skipping Excel rules) in these scenarios:
+
+1. **Priority 1 - Dropped Customers:** ANY account with `NOT_MIGRATED` status → All features enabled  
+   See `DROPPED_CUSTOMERS.md` for details.
+
+2. **Priority 2 - Terminal States:** ALL accounts are (`MIGRATED` OR `EXCLUDED` OR `NOT_MIGRATED`) → All features enabled  
+   See `TERMINAL_STATES.md` for details.
+
+3. **Priority 3 - Active Migration:** Has `SCHEDULED` or `IN_PROGRESS` accounts → Apply Excel rules  
+   Feature-by-feature control per WAVE1/WAVE2.
+
 ### WAVE1
 Migrates customers with (savings OR CD) WITHOUT checking accounts.
 
@@ -72,11 +85,15 @@ You can configure rules like:
 - **IRA** - Never migrated (EXCLUDED)
 
 ### Migration Statuses
-- `NOT_MIGRATED` - Not scheduled for migration
-- `EXCLUDED` - Never migrating (lending, IRA)
-- `SCHEDULED` - Selected for migration
-- `IN_PROGRESS` - Currently migrating
-- `MIGRATED` - Already completed
+
+**Terminal States** (no active migration):
+- `MIGRATED` - Migration completed → **All features enabled** (if all accounts)
+- `EXCLUDED` - Never migrating (lending, IRA) → **All features enabled** (if all accounts)
+- `NOT_MIGRATED` - Dropped or never scheduled → **All features enabled** (if any account)
+
+**Active Migration States** (Excel rules apply):
+- `SCHEDULED` - Selected for migration → Apply WAVE1/WAVE2 rules
+- `IN_PROGRESS` - Currently migrating → Apply WAVE1/WAVE2 rules
 
 ## API Endpoints
 

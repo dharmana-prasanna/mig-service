@@ -27,7 +27,7 @@ A complete Spring Boot service with Drools rules engine for managing feature fla
     - [3. Run the Service](#3-run-the-service)
     - [4. Test the API](#4-test-the-api)
   - [How It Works](#how-it-works)
-    - [Request Flow](#request-flow)
+    - [Request Flow (Three-Tier Logic)](#request-flow-three-tier-logic)
     - [Business Logic (in Excel Decision Table with Granular Control)](#business-logic-in-excel-decision-table-with-granular-control)
   - [Key Configuration Points](#key-configuration-points)
     - [1. Drools Rules Location (Excel Decision Table)](#1-drools-rules-location-excel-decision-table)
@@ -137,16 +137,25 @@ curl -X POST http://localhost:8080/api/features/check \
 
 ## How It Works
 
-### Request Flow
+### Request Flow (Three-Tier Logic)
 1. Client sends POST request with `customerId` header and list of features
 2. Service calls migration API to get customer's account statuses
-3. Creates `CustomerMigrationContext` with account data
-4. Drools engine evaluates rules in `migration-rules.drl`
-5. Rules determine which features to enable/suppress based on:
-   - Account types (savings, checking, CD, lending, IRA)
-   - Migration wave (WAVE1, WAVE2)
-   - Migration status
-6. Returns feature status list with reasons
+3. **Priority 1 - Dropped Customers:** If ANY account has `NOT_MIGRATED` status:
+   - Enable ALL features with reason "Features enabled, not migrating"
+   - Skip rule evaluation (customer staying in BankA)
+   - Return response
+4. **Priority 2 - Terminal States:** If ALL accounts are (`MIGRATED` OR `EXCLUDED` OR `NOT_MIGRATED`):
+   - Enable ALL features with reason "Features enabled, migration completed or not applicable"
+   - Skip rule evaluation (no active migration)
+   - Return response
+5. **Priority 3 - Active Migration:** Otherwise (has `SCHEDULED` or `IN_PROGRESS` accounts):
+   - Create `CustomerMigrationContext` with account data
+   - Drools engine evaluates rules in Excel decision table
+   - Rules determine which features to enable/suppress based on:
+     - Account types (savings, checking, CD, lending, IRA)
+     - Migration wave (WAVE1, WAVE2)
+     - Migration status
+   - Return feature status list with reasons
 
 ### Business Logic (in Excel Decision Table with Granular Control)
 

@@ -47,6 +47,20 @@ public class CustomerMigrationContext {
         return hasAccountType(AccountType.LENDING) || hasAccountType(AccountType.IRA);
     }
     
+    public boolean hasNotMigratedStatus() {
+        return accounts.stream()
+                .anyMatch(account -> account.getMigrationStatus() == MigrationStatus.NOT_MIGRATED);
+    }
+    
+    public boolean allAccountsInTerminalState() {
+        return accounts.stream()
+                .allMatch(account -> 
+                    account.getMigrationStatus() == MigrationStatus.MIGRATED ||
+                    account.getMigrationStatus() == MigrationStatus.EXCLUDED ||
+                    account.getMigrationStatus() == MigrationStatus.NOT_MIGRATED
+                );
+    }
+    
     public MigrationWave getCurrentWave() {
         // Get the wave from any scheduled or in-progress account
         return accounts.stream()

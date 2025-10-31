@@ -188,7 +188,96 @@ Content-Type: application/json
 
 ###
 
-### 8. Health Check
+### 8. Dropped Customer - NOT_MIGRATED Status (All Features Enabled)
+POST http://localhost:8080/api/features/check
+customerId: CUST_DROPPED
+Content-Type: application/json
+
+{
+  "features": ["feature1", "feature2", "feature3", "feature4"]
+}
+
+### Expected Migration API Response for CUST_DROPPED:
+# {
+#   "customerId": "CUST_DROPPED",
+#   "accounts": [
+#     {
+#       "accountId": "ACC_DROPPED",
+#       "accountType": "SAVINGS",
+#       "migrationStatus": "NOT_MIGRATED",
+#       "migrationWave": "WAVE1",
+#       "migrationDate": null
+#     }
+#   ]
+# }
+
+###
+
+### 9. Terminal State - All Accounts Migrated (All Features Enabled)
+POST http://localhost:8080/api/features/check
+customerId: CUST_ALL_MIGRATED
+Content-Type: application/json
+
+{
+  "features": ["feature1", "feature2", "feature3", "feature4"]
+}
+
+### Expected Migration API Response for CUST_ALL_MIGRATED:
+# {
+#   "customerId": "CUST_ALL_MIGRATED",
+#   "accounts": [
+#     {
+#       "accountId": "ACC001",
+#       "accountType": "SAVINGS",
+#       "migrationStatus": "MIGRATED",
+#       "migrationWave": "WAVE1",
+#       "migrationDate": "2025-11-08"
+#     },
+#     {
+#       "accountId": "ACC002",
+#       "accountType": "CD",
+#       "migrationStatus": "MIGRATED",
+#       "migrationWave": "WAVE1",
+#       "migrationDate": "2025-11-08"
+#     }
+#   ]
+# }
+
+###
+
+### 10. Terminal State - All Accounts Excluded/Lending (All Features Enabled)
+POST http://localhost:8080/api/features/check
+customerId: CUST_LENDING_ONLY
+Content-Type: application/json
+
+{
+  "features": ["feature1", "feature2", "feature3", "feature4"]
+}
+
+### Expected Migration API Response for CUST_LENDING_ONLY:
+# {
+#   "customerId": "CUST_LENDING_ONLY",
+#   "accounts": [
+#     {
+#       "accountId": "ACC003",
+#       "accountType": "LENDING",
+#       "migrationStatus": "EXCLUDED",
+#       "migrationWave": "NOT_APPLICABLE",
+#       "migrationDate": null
+#     },
+#     {
+#       "accountId": "ACC004",
+#       "accountType": "IRA",
+#       "migrationStatus": "EXCLUDED",
+#       "migrationWave": "NOT_APPLICABLE",
+#       "migrationDate": null
+#     }
+#   ]
+# }
+
+###
+
+### 11. Health Check
 GET http://localhost:8080/actuator/health
 
 ###

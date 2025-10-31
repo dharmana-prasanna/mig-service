@@ -4,7 +4,9 @@
 
 A complete Spring Boot service with **granular per-feature control** using Excel decision tables. Each feature can be independently enabled or disabled based on migration rules.
 
-## 🎉 Key Achievement: Granular Feature Control
+## 🎉 Key Achievements
+
+### 1. Granular Feature Control
 
 ### Before
 ```
@@ -18,6 +20,27 @@ feature2: OFF
 feature3: ON  ← Can be different!
 feature4: OFF
 ```
+
+### 2. Dropped Customers Support (Priority 1)
+
+**NEW!** Customers with `NOT_MIGRATED` status (dropped from migration) are automatically handled:
+- Detected with **Priority 1** (highest - before all other checks)
+- **All features enabled** immediately  
+- Reason: "Features enabled, not migrating"
+- **Skips rule evaluation** for better performance
+
+See `DROPPED_CUSTOMERS.md` for complete documentation.
+
+### 3. Terminal States Support (Priority 2)
+
+**NEW!** Customers whose ALL accounts are in terminal states (MIGRATED, EXCLUDED, or NOT_MIGRATED) are automatically handled:
+- Detected with **Priority 2** (after NOT_MIGRATED check)
+- **All features enabled** immediately
+- Reason: "Features enabled, migration completed or not applicable"
+- **Skips rule evaluation** for better performance
+- Covers post-migration customers and lending/IRA-only customers
+
+See `TERMINAL_STATES.md` for complete documentation.
 
 ## Implementation Summary
 

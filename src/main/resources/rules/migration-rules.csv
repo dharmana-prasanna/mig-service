@@ -1,0 +1,16 @@
+RuleSet,com.bank.migration.rules,,,,,,,,
+Sequential,false,,,,,,,,
+Import,com.bank.migration.model.rules.CustomerMigrationContext,,,,,,,,
+Import,com.bank.migration.model.migration.MigrationWave,,,,,,,,
+,,,,,,,,
+RuleTable Migration Feature Rules,,,,,,,,
+NAME,CONDITION,CONDITION,CONDITION,CONDITION,ACTION,ACTION,ACTION,ACTION
+Rule Name,currentWave,hasSavingsOrCD(),hasChecking(),hasLendingOrIRA(),feature1,feature2,feature3,feature4
+,$context : CustomerMigrationContext,$context,$context,$context,$context,$context,$context,$context
+WAVE1 - Suppress Savings/CD only,WAVE1,true,false,false,disabled,disabled,disabled,disabled
+WAVE1 - Enable Savings/CD with Checking,WAVE1,true,true,,enabled,enabled,enabled,enabled
+WAVE1 - Suppress Savings/CD with Lending/IRA,WAVE1,true,,true,disabled,disabled,disabled,disabled
+WAVE2 - Suppress Savings/CD/Checking,WAVE2,true,true,false,disabled,disabled,disabled,disabled
+WAVE2 - Suppress with Lending/IRA,WAVE2,true,true,true,disabled,disabled,disabled,disabled
+Default - Not in scope,NOT_APPLICABLE,,,,enabled,enabled,enabled,enabled
+Default - No Savings or CD,,false,,,enabled,enabled,enabled,enabled

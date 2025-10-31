@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: migration-feature-management-service
+
+server:
+  port: 8080
+
+migration:
+  api:
+    base-url: ${MIGRATION_API_BASE_URL:http://localhost:9090}
+    endpoint: /api/customer/{customerId}/accounts
+    timeout: 5000
+
+logging:
+  level:
+    com.bank.migration: DEBUG
+    org.drools: INFO
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+

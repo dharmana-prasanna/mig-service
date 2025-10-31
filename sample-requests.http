@@ -1,0 +1,195 @@
+### Sample HTTP Requests for Testing Migration Feature Management Service
+
+### 1. WAVE1 - Customer with Savings only (features suppressed)
+POST http://localhost:8080/api/features/check
+customerId: CUST001
+Content-Type: application/json
+
+{
+  "features": ["feature1", "feature2", "feature3", "feature4"]
+}
+
+### Expected Migration API Response for CUST001:
+# {
+#   "customerId": "CUST001",
+#   "accounts": [
+#     {
+#       "accountId": "ACC001",
+#       "accountType": "SAVINGS",
+#       "migrationStatus": "SCHEDULED",
+#       "migrationWave": "WAVE1",
+#       "migrationDate": "2025-11-15"
+#     }
+#   ]
+# }
+
+###
+
+### 2. WAVE1 - Customer with Savings and Checking (features enabled)
+POST http://localhost:8080/api/features/check
+customerId: CUST002
+Content-Type: application/json
+
+{
+  "features": ["feature1", "feature2", "feature3"]
+}
+
+### Expected Migration API Response for CUST002:
+# {
+#   "customerId": "CUST002",
+#   "accounts": [
+#     {
+#       "accountId": "ACC002",
+#       "accountType": "SAVINGS",
+#       "migrationStatus": "NOT_MIGRATED",
+#       "migrationWave": "WAVE1",
+#       "migrationDate": null
+#     },
+#     {
+#       "accountId": "ACC003",
+#       "accountType": "CHECKING",
+#       "migrationStatus": "NOT_MIGRATED",
+#       "migrationWave": "WAVE2",
+#       "migrationDate": "2025-11-22"
+#     }
+#   ]
+# }
+
+###
+
+### 3. WAVE1 - Customer with CD and Lending (features suppressed)
+POST http://localhost:8080/api/features/check
+customerId: CUST003
+Content-Type: application/json
+
+{
+  "features": ["feature1", "feature2", "feature3", "feature4"]
+}
+
+### Expected Migration API Response for CUST003:
+# {
+#   "customerId": "CUST003",
+#   "accounts": [
+#     {
+#       "accountId": "ACC004",
+#       "accountType": "CD",
+#       "migrationStatus": "SCHEDULED",
+#       "migrationWave": "WAVE1",
+#       "migrationDate": "2025-11-15"
+#     },
+#     {
+#       "accountId": "ACC005",
+#       "accountType": "LENDING",
+#       "migrationStatus": "EXCLUDED",
+#       "migrationWave": "NOT_APPLICABLE",
+#       "migrationDate": null
+#     }
+#   ]
+# }
+
+###
+
+### 4. WAVE2 - Customer with Savings, CD, and Checking (features suppressed)
+POST http://localhost:8080/api/features/check
+customerId: CUST004
+Content-Type: application/json
+
+{
+  "features": ["feature1", "feature2", "feature3"]
+}
+
+### Expected Migration API Response for CUST004:
+# {
+#   "customerId": "CUST004",
+#   "accounts": [
+#     {
+#       "accountId": "ACC006",
+#       "accountType": "SAVINGS",
+#       "migrationStatus": "SCHEDULED",
+#       "migrationWave": "WAVE2",
+#       "migrationDate": "2025-11-22"
+#     },
+#     {
+#       "accountId": "ACC007",
+#       "accountType": "CD",
+#       "migrationStatus": "SCHEDULED",
+#       "migrationWave": "WAVE2",
+#       "migrationDate": "2025-11-22"
+#     },
+#     {
+#       "accountId": "ACC008",
+#       "accountType": "CHECKING",
+#       "migrationStatus": "SCHEDULED",
+#       "migrationWave": "WAVE2",
+#       "migrationDate": "2025-11-22"
+#     }
+#   ]
+# }
+
+###
+
+### 5. WAVE2 - Customer with Savings, Checking, and IRA (features suppressed)
+POST http://localhost:8080/api/features/check
+customerId: CUST005
+Content-Type: application/json
+
+{
+  "features": ["feature1", "feature2"]
+}
+
+### Expected Migration API Response for CUST005:
+# {
+#   "customerId": "CUST005",
+#   "accounts": [
+#     {
+#       "accountId": "ACC009",
+#       "accountType": "SAVINGS",
+#       "migrationStatus": "SCHEDULED",
+#       "migrationWave": "WAVE2",
+#       "migrationDate": "2025-11-22"
+#     },
+#     {
+#       "accountId": "ACC010",
+#       "accountType": "CHECKING",
+#       "migrationStatus": "SCHEDULED",
+#       "migrationWave": "WAVE2",
+#       "migrationDate": "2025-11-22"
+#     },
+#     {
+#       "accountId": "ACC011",
+#       "accountType": "IRA",
+#       "migrationStatus": "EXCLUDED",
+#       "migrationWave": "NOT_APPLICABLE",
+#       "migrationDate": null
+#     }
+#   ]
+# }
+
+###
+
+### 6. Error Case - Missing customerId header
+POST http://localhost:8080/api/features/check
+Content-Type: application/json
+
+{
+  "features": ["feature1", "feature2"]
+}
+
+###
+
+### 7. Error Case - Empty features list
+POST http://localhost:8080/api/features/check
+customerId: CUST006
+Content-Type: application/json
+
+{
+  "features": []
+}
+
+###
+
+### 8. Health Check
+GET http://localhost:8080/actuator/health
+
+###
+

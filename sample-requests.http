@@ -277,7 +277,55 @@ Content-Type: application/json
 
 ###
 
-### 11. Health Check
+### 11. Get Customer Accounts Only (No Features)
+POST http://localhost:8080/api/features/customers/CUST001/accounts?withFeatures=false
+Content-Type: application/json
+
+###
+
+### 12. Get Customer Accounts with Feature Suppression Info
+POST http://localhost:8080/api/features/customers/CUST001/accounts?withFeatures=true
+Content-Type: application/json
+
+{
+  "features": ["feature1", "feature2", "feature3", "feature4"]
+}
+
+### Expected Response:
+# {
+#   "customerId": "CUST001",
+#   "customerStatus": "IN_PROGRESS",
+#   "accounts": [
+#     {
+#       "accountId": "ACC001",
+#       "accountType": "SAVINGS",
+#       "migrationStatus": "IN_PROGRESS",
+#       "migrationWave": "WAVE1",
+#       "migrationDate": "2025-11-08"
+#     }
+#   ],
+#   "featureSuppressionInfo": {
+#     "feature1": {
+#       "feature": "feature1",
+#       "enabled": false,
+#       "reason": "IN_PROGRESS: feature1 disabled"
+#     }
+#   }
+# }
+
+###
+
+### 13. Get Customer Accounts with Specific Features
+POST http://localhost:8080/api/features/customers/CUST001/accounts?withFeatures=true
+Content-Type: application/json
+
+{
+  "features": ["feature1", "feature3"]
+}
+
+###
+
+### 14. Health Check
 GET http://localhost:8080/actuator/health
 
 ###

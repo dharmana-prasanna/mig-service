@@ -1,5 +1,6 @@
 package com.bank.migration.service;
 
+import com.bank.migration.model.dto.CustomerAccountsResponse;
 import com.bank.migration.model.dto.FeatureCheckResponse;
 import com.bank.migration.model.dto.FeatureStatus;
 import com.bank.migration.model.migration.AccountInfo;
@@ -10,7 +11,9 @@ import org.kie.api.runtime.KieContainer;
 import org.kie.api.runtime.KieSession;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -68,6 +71,65 @@ public class FeatureDecisionService {
                 .customerId(customerId)
                 .features(featureStatuses)
                 .build();
+    }
+    
+    public CustomerAccountsResponse getAccountsWithFeatures(String customerId, boolean withFeatures, List<String> features) {
+        log.info("Getting accounts for customer: {} (withFeatures: {})", customerId, withFeatures);
+        
+        // Step 1: Get account statuses from migration API
+        List<AccountInfo> accounts = migrationApiClient.getAccountStatuses(customerId);
+        log.debug("Retrieved {} accounts for customer {}", accounts.size(), customerId);
+        
+        // Step 2: Create context and derive customer status
+        CustomerMigrationContext context = CustomerMigrationContext.builder()
+                .customerId(customerId)
+                .accounts(accounts)
+                .requestedFeatures(features != null ? features : List.of())
+                .build();
+        
+        context.deriveCustomerStatus();
+        log.info("Customer {} has derived status: {}", customerId, context.getCustomerStatus());
+        
+        // Step 3: Build response with accounts and customer status
+        CustomerAccountsResponse.CustomerAccountsResponseBuilder responseBuilder = CustomerAccountsResponse.builder()
+                .customerId(customerId)
+                .customerStatus(context.getCustomerStatus())
+                .accounts(accounts);
+        
+        // Step 4: If withFeatures=true, evaluate feature suppression
+        if (withFeatures && features != null && !features.isEmpty()) {
+            log.debug("Evaluating feature suppression for {} features", features.size());
+            
+            // Execute Drools rules
+            KieSession kieSession = kieContainer.newKieSession();
+            try {
+                kieSession.insert(context);
+                int rulesFired = kieSession.fireAllRules();
+                log.debug("Fired {} rules for customer {}", rulesFired, customerId);
+            } finally {
+                kieSession.dispose();
+            }
+            
+            // Apply defaults
+            context.applyDefaults();
+            
+            // Build feature suppression info map
+            Map<String, FeatureStatus> featureSuppressionInfo = new HashMap<>();
+            features.forEach(feature -> {
+                FeatureStatus status = FeatureStatus.builder()
+                        .feature(feature)
+                        .enabled(context.getFeatureDecisions().getOrDefault(feature, true))
+                        .reason(context.getDecisionReasons().getOrDefault(feature, "Default: Feature enabled"))
+                        .build();
+                featureSuppressionInfo.put(feature, status);
+            });
+            
+            responseBuilder.featureSuppressionInfo(featureSuppressionInfo);
+            log.debug("Added feature suppression info for {} features", features.size());
+        }
+        
+        log.info("Completed accounts retrieval for customer: {}", customerId);
+        return responseBuilder.build();
     }
 }
 

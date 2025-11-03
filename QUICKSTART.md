@@ -126,9 +126,20 @@ java -jar target/migration-feature-management-1.0.0-SNAPSHOT.jar
 ```
 
 ### 4. Test the API
+
+**Test feature check:**
 ```bash
 curl -X POST http://localhost:8080/api/features/check \
   -H "customerId: CUST001" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "features": ["feature1", "feature2", "feature3", "feature4"]
+  }'
+```
+
+**Test accounts with features:**
+```bash
+curl -X POST http://localhost:8080/api/features/customers/CUST001/accounts?withFeatures=true \
   -H "Content-Type: application/json" \
   -d '{
     "features": ["feature1", "feature2", "feature3", "feature4"]

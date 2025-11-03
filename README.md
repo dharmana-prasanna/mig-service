@@ -121,7 +121,7 @@ You can configure rules like:
 
 ## API Endpoints
 
-### Check Features
+### 1. Check Features
 Determines which features should be enabled for a customer.
 
 **Endpoint:** `POST /api/features/check`
@@ -169,6 +169,56 @@ Content-Type: application/json
 ```
 
 Note: Each feature can have a different status!
+
+### 2. Get Customer Accounts with Features
+Retrieves customer accounts from migration API with optional feature suppression information.
+
+**Endpoint:** `POST /api/customers/{customerId}/accounts`
+
+**Query Parameters:**
+```
+withFeatures: true/false (default: false)
+```
+
+**Request Body (optional - only if withFeatures=true):**
+```json
+{
+  "features": ["feature1", "feature2", "feature3", "feature4"]
+}
+```
+
+**Response:**
+```json
+{
+  "customerId": "CUST001",
+  "customerStatus": "IN_PROGRESS",
+  "accounts": [
+    {
+      "accountId": "ACC001",
+      "accountType": "SAVINGS",
+      "migrationStatus": "IN_PROGRESS",
+      "migrationWave": "WAVE1",
+      "migrationDate": "2025-11-08"
+    }
+  ],
+  "featureSuppressionInfo": {
+    "feature1": {
+      "feature": "feature1",
+      "enabled": false,
+      "reason": "IN_PROGRESS: feature1 disabled"
+    },
+    "feature2": {
+      "feature": "feature2",
+      "enabled": false,
+      "reason": "IN_PROGRESS: feature2 disabled"
+    }
+  }
+}
+```
+
+**Use Cases:**
+- Get accounts only: `?withFeatures=false` (no request body needed)
+- Get accounts with feature info: `?withFeatures=true` (include features in request body)
 
 ## Configuration
 
